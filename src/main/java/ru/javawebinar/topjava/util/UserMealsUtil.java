@@ -24,18 +24,20 @@ public class UserMealsUtil {
         );
 
         List<UserMealWithExcess> mealsTo = filteredByCycles(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
-        mealsTo.forEach(System.out::println);
+       // mealsTo.forEach(System.out::println);
 
-        System.out.println(filteredByStreams(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
+       // System.out.println(filteredByStreams(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
+        System.out.println(filteredByStreamsO2(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
     }
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        List<UserMealWithExcess> res = new ArrayList<>();
-        HashMap<LocalDateTime,Integer> daysMap = new HashMap<>();
+
+        Map<LocalDateTime,Integer> daysMap = new HashMap<>();
         for (UserMeal meal:
                 meals) {
             daysMap.merge(meal.getDateTime().truncatedTo(ChronoUnit.DAYS), meal.getCalories(), Integer::sum);
         }
+        List<UserMealWithExcess> res = new ArrayList<>();
         for (UserMeal userMeal :
              meals) {
             if (TimeUtil.isBetweenHalfOpen(userMeal.getDateTime().toLocalTime(), startTime,endTime)) {
@@ -56,5 +58,11 @@ public class UserMealsUtil {
 
     }
 
+
+    public static List<UserMealWithExcess> filteredByStreamsO2(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+       return meals.stream().collect(Collectors.collectingAndThen(Collectors.toMap(i->i.getDateTime().truncatedTo(ChronoUnit.DAYS), UserMeal::getCalories, Integer::sum),
+                map -> meals.stream().filter(i -> TimeUtil.isBetweenHalfOpen(i.getDateTime().toLocalTime(),startTime ,endTime))
+                        .map(i -> new UserMealWithExcess(i.getDateTime(), i.getDescription(), i.getCalories(),map.get(i.getDateTime().truncatedTo(ChronoUnit.DAYS)) > caloriesPerDay)).collect(Collectors.toList())));
+    }
 
 }
