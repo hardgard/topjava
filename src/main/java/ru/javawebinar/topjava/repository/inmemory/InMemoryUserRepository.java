@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -47,13 +48,13 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public List<User> getAll() {
         log.info("getAll");
-        return new CopyOnWriteArrayList<>(repository.values()).stream()
+        return new ArrayList<>(repository.values()).stream()
                 .sorted((Comparator.comparing(User :: getName).thenComparing(User :: getEmail))).collect(Collectors.toList());
     }
 
     @Override
     public User getByEmail(String email) {
         log.info("getByEmail {}", email);
-        return (User) repository.values().stream().filter(x -> x.getEmail().equals(email));
+        return repository.values().stream().filter(user -> user.getEmail().equalsIgnoreCase(email)).collect(Collectors.toList()).get(0);
     }
 }
